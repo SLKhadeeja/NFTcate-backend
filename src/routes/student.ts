@@ -3,6 +3,7 @@ import { createWallet } from '../utils/wallet';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Student } from '../models/Student';
+import { authenticateToken } from '../middlewares/authenticateToken';
 
 const router = express.Router();
 
@@ -79,6 +80,26 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
     });
 
     res.status(200).json({ ...userDetails, token });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+  const { id } = req.params;
+
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ message: 'Invalid student ID' });
+  }
+
+  try {
+    const student = await Student.findById(id);
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+
+    res.status(200).json(student);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

@@ -3,6 +3,7 @@ import { createWallet } from '../utils/wallet';
 import { Institution } from '../models/Institution';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { authenticateToken } from '../middlewares/authenticateToken';
 
 const router = express.Router();
 
@@ -82,5 +83,35 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
     res.status(500).json({ message: 'Server error', error });
   }
 });
+
+router.get('/', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const institutions = await Institution.find({}, '-password -privateKey');
+    res.status(200).json(institutions);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+  const { id } = req.params;
+
+  if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ message: 'Invalid institution ID' });
+  }
+
+  try {
+    const institution = await Institution.findById(id);
+
+    if (!institution) {
+      return res.status(404).json({ message: 'Institution not found' });
+    }
+
+    res.status(200).json(institution);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
 
 export default router;
