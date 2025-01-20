@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import institutionRoutes from './routes/institution';
 import studentRoutes from './routes/student';
 import nftRoutes from './routes/nft';
+import userRoutes from './routes/user';
 import dotenv from 'dotenv';
 import cors from 'cors';
 
@@ -19,6 +20,7 @@ app.use(cors({
 app.use('/institutions', institutionRoutes);
 app.use('/students', studentRoutes);
 app.use('/certificate', nftRoutes);
+app.use('/user', userRoutes);
 
 mongoose.connect(process.env.MONGO_URI!).then(() => {
   console.log('Connected to MongoDB');

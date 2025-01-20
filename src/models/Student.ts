@@ -1,7 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { Institution } from './Institution';
 
-export interface IInstitution extends Document {
+export interface IStudent extends Document {
   studentId: string;
   firstName: string;
   middleName: string;
@@ -20,7 +19,7 @@ export interface IInstitution extends Document {
 const StudentSchema = new Schema({
   studentId: { type: String, required: true, unique: true },
   firstName: { type: String, required: true },
-  middleName: { type: String, required: true },
+  middleName: { type: String },
   lastName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   dob: { type: String, required: true },

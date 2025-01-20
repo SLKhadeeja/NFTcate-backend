@@ -79,7 +79,7 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
       expiresIn: '1h',
     });
 
-    res.status(200).json({ ...userDetails, token });
+    res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

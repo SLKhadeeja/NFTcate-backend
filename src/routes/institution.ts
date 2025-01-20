@@ -78,13 +78,13 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
       expiresIn: '1h',
     });
 
-    res.status(200).json({ ...userDetails, token });
+    res.status(200).json({ token });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
 });
 
-router.get('/', authenticateToken, async (req: Request, res: Response): Promise<any> => {
+router.get('/', async (req: Request, res: Response): Promise<any> => {
   try {
     const institutions = await Institution.find({}, '-password -privateKey');
     res.status(200).json(institutions);
