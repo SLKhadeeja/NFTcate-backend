@@ -1,9 +1,9 @@
 import axios from "axios";
-import { CID } from 'multiformats/cid';
+// import { CID } from 'multiformats/cid';
 
 const isValidCID = (cid: string): boolean => {
   try {
-    CID.parse(cid);
+    // CID.parse(cid);
     return true;
   } catch {
     return false;

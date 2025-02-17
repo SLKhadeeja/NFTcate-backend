@@ -8,6 +8,6 @@ export const getContract = (abi: any, address: string, privateKey: string) => {
 };
 
 export const mintNFT = async (contract: any, to: string, metadata: string) => {
-  const tx = await contract.mint(to, metadata);
+  const tx = await contract.mintNFT(to, metadata);
   return await tx.wait();
 };
