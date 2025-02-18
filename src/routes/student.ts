@@ -85,6 +85,19 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
+
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+  try {
+    const students = await Student.find({ institution: req.user?.id }, '-password -privateKey -__v -institution');
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
 router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<any> => {
   const { id } = req.params;
 

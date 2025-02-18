@@ -5,6 +5,8 @@ import { mintNFT, getContract } from '../services/ethereum';
 import { NFT } from '../models/NFT';
 import { Institution } from '../models/Institution';
 import pinataSDK from '@pinata/sdk';
+import { authenticateToken } from '../middlewares/authenticateToken';
+import { Student } from '../models/Student';
 
 const router = express.Router();
 const storage = multer.memoryStorage();
@@ -20,19 +22,26 @@ const contractABI = [
 ];
 
 router.post('/mint', upload.single('image'), async (req: Request, res: Response): Promise<any> => {
-  const { to, name, description, institutionId } = req.body;
+  const { name, description, institution, student } = req.body;
 
-  const institution = await Institution.findById(institutionId);
-  if (!institution || !institution.isVerified) {
+  const institutionDetails = await Institution.findById(institution);
+  if (!institutionDetails || !institutionDetails.isVerified) {
     return res.status(403).json({ error: 'Unauthorized institution' });
   }
+
+  const studentDetails = await Student.findById(student);
+  if (!studentDetails) {
+    return res.status(403).json({ error: 'Student not found' });
+  }
+
+  const to = studentDetails.publicKey;
 
   if (!req.file) {
     return res.status(400).json({ error: 'Image file is required' });
   }
 
   const imageBuffer = req.file.buffer;
-  const imageUrl = await uploadImageToPinata(imageBuffer, `${name}-${institutionId}`);
+  const imageUrl = await uploadImageToPinata(imageBuffer, `${name}-${institution}`);
 
   const metadata = {
     name,
@@ -42,15 +51,15 @@ router.post('/mint', upload.single('image'), async (req: Request, res: Response)
 
   const metadataUrl = await uploadMetadataToPinata(metadata);
 
-  const contract = getContract(contractABI, process.env.CONTRACT_ADDRESS!, institution.privateKey);
+  const contract = getContract(contractABI, process.env.CONTRACT_ADDRESS!, institutionDetails.privateKey);
   const tx = await mintNFT(contract, to, metadataUrl);
 
   const nft = new NFT({
     transaction: JSON.stringify(tx),
-    metadata: metadataUrl,
-    image: imageUrl,
-    owner: to,
-    issuer: institutionId,
+    metadataUrl: metadataUrl,
+    imageUrl: imageUrl,
+    owner: student,
+    issuer: institution,
   });
   await nft.save();
 
@@ -106,7 +115,25 @@ router.get('/verify', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
 
-
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+  try {
+    const students = await NFT.find({}, '-_id -__v -transaction')
+      .populate({
+        path: 'issuer',
+        select: 'name',
+      })
+      .populate({
+        path: 'owner',
+        select: 'firstName lastName studentId',
+      });
+    res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
 
 export default router;
