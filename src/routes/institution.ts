@@ -1,9 +1,11 @@
+import { authenticateToken } from './../middlewares/authenticateToken';
 import express, { Request, Response } from 'express';
 import { createWallet } from '../utils/wallet';
 import { Institution } from '../models/Institution';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { authenticateToken } from '../middlewares/authenticateToken';
+import { Student } from '../models/Student';
+import { NFT } from '../models/NFT';
 
 const router = express.Router();
 
@@ -84,7 +86,7 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
-router.get('/', async (req: Request, res: Response): Promise<any> => {
+router.get('/', authenticateToken, async (req: Request, res: Response): Promise<any> => {
   try {
     const institutions = await Institution.find({}, '-password -privateKey');
     res.status(200).json(institutions);
@@ -97,6 +99,20 @@ router.get('/list', async (req: Request, res: Response): Promise<void> => {
   try {
     const institutions = await Institution.find({}, 'name _id');
     res.status(200).json(institutions);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+interface AuthenticatedRequest extends Request {
+  user?: { id: string };
+}
+
+router.get('/count', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    const students = await Student.find({ institution: req.user?.id });
+    const certificates = await NFT.find({ issuer: req.user?.id });
+    res.status(200).json({ students: students.length, certificates: certificates.length });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

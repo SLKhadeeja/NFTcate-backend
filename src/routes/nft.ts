@@ -41,7 +41,7 @@ router.post('/mint', upload.single('image'), async (req: Request, res: Response)
   }
 
   const imageBuffer = req.file.buffer;
-  const imageUrl = await uploadImageToPinata(imageBuffer, `${name}-${institution}`);
+  const imageUrl = await uploadImageToPinata(imageBuffer, `${name}-${institution}`, { name, description, schoolName: institutionDetails.name });
 
   const metadata = {
     name,
@@ -85,22 +85,19 @@ router.post("/addInstitution", async (req: Request, res: Response): Promise<any>
   }
 });
 
-router.get('/verify', async (req: Request, res: Response): Promise<any> => {
+router.post('/verify', async (req: Request, res: Response): Promise<any> => {
   const { link } = req.body;
 
   try {
-    // Ensure CID or link is a string
     const contentCID = link?.toString().split('/').pop();
-    console.log(link, contentCID);
 
     if (!contentCID) {
       return res.status(400).json({ message: 'Please provide a valid CID or link.' });
     }
 
-    // Fetch metadata from Pinata using hashContains to filter by CID
     const metadataResponse = await pinata.pinList({ hashContains: contentCID });
-    if (metadataResponse.rows.length === 0) {
-      return res.status(404).json({ message: 'Certificate metadata not found on IPFS.' });
+    if (metadataResponse && metadataResponse.rows.length === 0) {
+      return res.status(404).json({ message: 'Certificate not found.' });
     }
 
     const metadata = metadataResponse.rows[0];

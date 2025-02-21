@@ -4,16 +4,31 @@ import { Readable } from 'stream';
 
 dotenv.config();
 
-const pinata = new pinataSDK(process.env.PINATA_API_KEY!, process.env.PINATA_SECRET_API_KEY!);
+interface IImageMetadata {
+  name: string;
+  description: string;
+  schoolName: string;
+}
 
-export const uploadImageToPinata = async (imageBuffer: Buffer, fileName: string) => {
+const pinata = new pinataSDK(process.env.PINATA_API_KEY, process.env.PINATA_SECRET_API_KEY);
+
+export const uploadImageToPinata = async (imageBuffer: Buffer, fileName:string, metadata: IImageMetadata) => {
     try {
         const readableStream = new Readable();
         readableStream.push(imageBuffer);
         readableStream.push(null);
 
+        
         const result = await pinata.pinFileToIPFS(readableStream, {
-          pinataMetadata: { name: fileName }
+          pinataMetadata: {
+            name: fileName,
+            // @ts-ignore (Disable TypeScript check for keyvalues)
+            keyvalues: {
+              name: metadata.name.toString(),
+              description: metadata.description.toString(),
+              schoolName: metadata.schoolName.toString(),
+            },
+          }
         });
         const imageURI = `https://gateway.pinata.cloud/ipfs/${result.IpfsHash}`;
         return imageURI;
@@ -39,29 +54,3 @@ export const uploadMetadataToPinata = async (metadata: IMetaData) => {
       throw error;
   }
 };
-
-// export const uploadToIPFS = async (input: Buffer<any>, type: 'image'|'data'): Promise<string> => {
-//   try {
-//     const formData = new FormData();
-//     if (type === "image") {
-//       formData.append("file", input);
-//     } else {
-//       formData.append("file", input, {
-//         filename: "metadata.json",
-//         contentType: "application/json",
-//       });
-//     }
-
-//     const response = await axios.post(INFURA_IPFS_API, formData, {
-//       headers: {
-//         ...formData.getHeaders(),
-//         Authorization: INFURA_AUTH,
-//       },
-//     });
-
-//     return `https://ipfs.io/ipfs/${response.data.Hash}`;
-//   } catch (error) {
-//     console.error("Error uploading to IPFS:", error);
-//     throw new Error("Upload to IPFS failed");
-//   }
-// };

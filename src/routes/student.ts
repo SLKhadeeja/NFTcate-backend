@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { Student } from '../models/Student';
 import { authenticateToken } from '../middlewares/authenticateToken';
+import { NFT } from '../models/NFT';
 
 const router = express.Router();
 
@@ -93,6 +94,23 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
   try {
     const students = await Student.find({ institution: req.user?.id }, '-password -privateKey -__v -institution');
     res.status(200).json(students);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.get('/certificates', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+  try {
+    const certificates = await NFT.find({ owner: req.user?.id })
+    .populate({
+      path: 'owner',
+      select: 'firstName middleName lastName studentId',
+    })
+    .populate({
+      path: 'issuer',
+      select: 'name institutionId',
+    });
+    res.status(200).json(certificates);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
