@@ -25,9 +25,14 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
   const wallet = createWallet();
 
   try {
-    const existingUser = await Student.findOne({ email });
-    if (existingUser) {
+    const existingEmail = await Student.findOne({ email });
+    const existingId = await Student.findOne({ studentId });
+    if (existingEmail) {
       return res.status(400).json({ message: 'Student with this email already exists' });
+    }
+
+    if (existingId) {
+      return res.status(400).json({ message: 'Student with this Id already exists' });
     }
 
     const salt = await bcrypt.genSalt(10);

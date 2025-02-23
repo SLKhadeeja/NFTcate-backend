@@ -1,6 +1,6 @@
 import { ethers, JsonRpcProvider } from 'ethers';
 
-const provider = new JsonRpcProvider(process.env.INFURA_API_URL);
+export const provider = new JsonRpcProvider(process.env.INFURA_API_URL);
 
 export const getContract = (abi: any, address: string, privateKey: string) => {
   const wallet = new ethers.Wallet(privateKey, provider);

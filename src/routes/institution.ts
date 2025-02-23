@@ -66,11 +66,13 @@ router.post('/login', async (req: Request, res: Response): Promise<any> => {
   try {
     const user = await Institution.findOne({ email });
     if (!user) {
+      console.log('no user')
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      console.log('no password')
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
@@ -113,6 +115,23 @@ router.get('/count', authenticateToken, async (req: AuthenticatedRequest, res: R
     const students = await Student.find({ institution: req.user?.id });
     const certificates = await NFT.find({ issuer: req.user?.id });
     res.status(200).json({ students: students.length, certificates: certificates.length });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+});
+
+router.get('/certificates', authenticateToken, async (req: AuthenticatedRequest, res: Response): Promise<any> => {
+  try {
+    const certificates = await NFT.find({ issuer: req.user?.id })
+    .populate({
+      path: 'owner',
+      select: 'firstName middleName lastName studentId',
+    })
+    .populate({
+      path: 'issuer',
+      select: 'name institutionId',
+    });
+    res.status(200).json(certificates);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }

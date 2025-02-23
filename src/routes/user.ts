@@ -3,6 +3,8 @@ import express, { Request, Response } from 'express';
 import { authenticateToken } from '../middlewares/authenticateToken';
 import { IInstitution, Institution } from '../models/Institution';
 import { IStudent, Student } from '../models/Student';
+import { ethers } from 'ethers';
+import { provider } from '../services/ethereum';
 
 const router = express.Router();
 
@@ -38,7 +40,9 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     }
 
     const { password: _, ...institutionDetails } = institution.toObject();
-    return res.status(200).json({ userType: 'institution', ...institutionDetails});
+    const balance = await provider.getBalance(institutionDetails.publicKey);
+    const balanceInEth = ethers.formatEther(balance);
+    return res.status(200).json({ userType: 'institution', walletBalance: balanceInEth, ...institutionDetails});
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
