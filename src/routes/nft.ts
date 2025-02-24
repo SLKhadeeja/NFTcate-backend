@@ -86,9 +86,7 @@ router.post("/mint", upload.single("image"), async (req: Request, res: Response)
     try {
       const contract = getContract(contractABI, process.env.CONTRACT_ADDRESS!, institutionDetails.privateKey);
       tx = await mintNFT(contract, to, metadataUrl);
-      await tx.wait();
     } catch (contractError: any) {
-      console.error("Error minting NFT" );
       const message = contractError.info?.error.message.split(",")[0] || '';
       return res.status(500).json({ error: "Failed to mint NFT", details: message });
     }
