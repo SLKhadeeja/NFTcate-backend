@@ -89,7 +89,7 @@ router.post("/mint", upload.single("image"), async (req: Request, res: Response)
       await tx.wait();
     } catch (contractError: any) {
       console.error("Error minting NFT" );
-      const message = contractError.info.error.message.split(",")[0];
+      const message = contractError.info?.error.message.split(",")[0] || '';
       return res.status(500).json({ error: "Failed to mint NFT", details: message });
     }
 
